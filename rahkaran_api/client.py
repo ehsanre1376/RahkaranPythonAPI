@@ -73,8 +73,9 @@ def require_auth(func):
     """Decorator to ensure valid authentication before making requests."""
     @wraps(func)
     def wrapper(self, *args, **kwargs):
-        if not self.login():
-            raise AuthenticationError("Failed to authenticate with the API")
+        if  not self.login():
+            if  not self.login(is_retry=True):
+                raise AuthenticationError("Failed to authenticate with the API")
         return func(self, *args, **kwargs)
     return wrapper
 
@@ -99,7 +100,7 @@ class RahkaranAPI:
         
         # Initialize session management
         self.session = ""
-        self.expire_date = datetime.now() - timedelta(minutes=5)
+        self.expire_date = datetime.now() - timedelta(minutes=50000)
         self.auth_file = f"sg-auth-{self.config.rahkaran_name}.txt"
         
         # Initialize requests session
@@ -165,13 +166,30 @@ class RahkaranAPI:
                             content = file.readlines()
                             if len(content) >= 2:
                                 self.session = content[0].strip()
-                                self.expire_date = datetime.strptime(
-                                    content[1].strip(), "%d-%b-%Y %H:%M:%S"
-                                )
-                                
-                                # If session is still valid, return it
-                                if datetime.now() < self.expire_date:
-                                    return self.session
+                                expire_str = content[1].strip()
+                                try:
+                                    # Try parsing with various formats
+                                    formats = [
+                                        "%d-%b-%Y %H:%M:%S GMT",
+                                        "%d-%b-%Y %H:%M:%S",
+                                        "%Y-%m-%d %H:%M:%S"
+                                    ]
+                                    for fmt in formats:
+                                        try:
+                                            self.expire_date = datetime.strptime(expire_str, fmt)
+                                            break
+                                        except ValueError:
+                                            continue
+                                    else:
+                                        raise ValueError(f"Could not parse date: {expire_str}")
+                                        
+                                    # If session is still valid, return it
+                                    now_time=datetime.now()
+                                    file_time=self.expire_date
+                                    if datetime.now() < self.expire_date:
+                                        return self.session
+                                except ValueError as e:
+                                    self.logger.warning(f"Failed to parse stored date: {e}")
                     else:
                         # Delete old auth file
                         try:
@@ -253,17 +271,36 @@ class RahkaranAPI:
 
             self.session = cookie_parts[2].split(";")[0].strip()
             expire_str = cookie_parts[1].split(";")[0].strip()
-            self.expire_date = datetime.strptime(expire_str, "%d-%b-%Y %H:%M:%S %Z")
+            
+            # Remove GMT from string before parsing
+            expire_str = expire_str.replace(" GMT", "")
+            
+            try:
+                #pass
+                self.expire_date = datetime.strptime(expire_str, "%d-%b-%Y %H:%M:%S")
+                
+                
+            except ValueError as e:
+                pass
+            try:
+                #pass
+                
+                auth_file_path = os.path.join(tempfile.gettempdir(), self.auth_file)
+                
+            except ValueError as e:
+                pass
+
 
             # Save session to temp file
             try:
-                auth_file_path = os.path.join(tempfile.gettempdir(), self.auth_file)
+                
                 with open(auth_file_path, "w", encoding="utf-8") as f:
                     f.write(f"{self.session}\n")
+                    # Store without timezone for consistency
                     f.write(self.expire_date.strftime("%d-%b-%Y %H:%M:%S"))
                 
                 # Set file permissions to user-only
-                os.chmod(auth_file_path, 0o600)
+                #os.chmod(auth_file_path, 0o600)
             except IOError as e:
                 self.logger.warning(f"Failed to write auth file: {str(e)}")
 
@@ -325,9 +362,11 @@ class RahkaranAPI:
             
         except requests.exceptions.RequestException as e:
             self.logger.error(f"GET request failed for {endpoint}: {str(e)}")
-            raise APIError(f"GET request failed: {str(e)}", 
-                         getattr(response, 'status_code', None),
-                         getattr(response, 'json', lambda: {})())
+            self.login(is_retry=True)
+            self.get(endpoint)
+            # raise APIError(f"GET request failed: {str(e)}", 
+            #              getattr(response, 'status_code', None),
+            #              getattr(response, 'json', lambda: {})())
 
     @require_auth
     def post(self, endpoint: str, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -377,4 +416,4 @@ class RahkaranAPI:
             self.logger.error(f"POST request failed for {endpoint}: {str(e)}")
             raise APIError(f"POST request failed: {str(e)}", 
                          getattr(response, 'status_code', None),
-                         getattr(response, 'json', lambda: {})()) 
+                         getattr(response, 'json', lambda: {})())

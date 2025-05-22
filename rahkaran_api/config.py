@@ -9,13 +9,14 @@ import logging
 @dataclass
 class RahkaranConfig:
     """Configuration class for RahkaranAPI client."""
-    rahkaran_name: str
+    rahkaran_name: str = "code"
     server_name: str = "localhost"
     port: str = "80"
     username: str = "admin"
     password: str = "admin"
     protocol: str = "http"
-    verify_ssl: bool = True
+    verify_ssl: bool = False
+
     timeout: int = 10
     max_retries: int = 3
     log_level: int = logging.ERROR

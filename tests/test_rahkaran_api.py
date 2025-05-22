@@ -12,10 +12,10 @@ from rahkaran_api.exceptions import AuthenticationError, APIError
 @pytest.fixture
 def config():
     return RahkaranConfig(
-        rahkaran_name="test",
-        server_name="test.example.com",
-        username="test_user",
-        password="test_pass"
+        rahkaran_name="code",
+        server_name="localhost",
+        username="admin",
+        password="admin"
     )
 
 @pytest.fixture
@@ -25,7 +25,7 @@ def api(config):
 def test_config_validation():
     """Test configuration validation."""
     # Valid config
-    config = RahkaranConfig(rahkaran_name="test")
+    config = RahkaranConfig(rahkaran_name="code")
     config.validate()
     
     # Invalid rahkaran_name
@@ -34,15 +34,15 @@ def test_config_validation():
     
     # Invalid port
     with pytest.raises(ValueError):
-        RahkaranConfig(rahkaran_name="test", port="invalid").validate()
+        RahkaranConfig(rahkaran_name="code", port="80").validate()
     
     # Invalid protocol
     with pytest.raises(ValueError):
-        RahkaranConfig(rahkaran_name="test", protocol="ftp").validate()
+        RahkaranConfig(rahkaran_name="code", protocol="http").validate()
 
 def test_base_url(config):
     """Test base URL construction."""
-    assert config.base_url == "http://test.example.com:80/test"
+    assert config.base_url == "http://localhost:80/code"
 
 @patch("requests.Session")
 def test_login_success(mock_session, api):

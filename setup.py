@@ -7,11 +7,11 @@ setup(
     name="rahkaran-api",
     version="0.1.0",
     author="Ehsan Rezaei",
-    author_email="your.email@example.com",  # Replace with your email
+    author_email="ehsanre@systemgroup.net",  
     description="A Python client for the Rahkaran API",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/rahkaran-api",  # Replace with your repo URL
+    url="https://github.com/ehsanre1376/RahkaranPythonAPI",  
     packages=find_packages(),
     classifiers=[
         "Development Status :: 3 - Alpha",
