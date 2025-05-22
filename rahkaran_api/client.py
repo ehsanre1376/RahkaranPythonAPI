@@ -414,6 +414,8 @@ class RahkaranAPI:
             
         except requests.exceptions.RequestException as e:
             self.logger.error(f"POST request failed for {endpoint}: {str(e)}")
-            raise APIError(f"POST request failed: {str(e)}", 
-                         getattr(response, 'status_code', None),
-                         getattr(response, 'json', lambda: {})())
+            self.login(is_retry=True)
+            self.post(endpoint, data)
+            # raise APIError(f"POST request failed: {str(e)}", 
+                        #  getattr(response, 'status_code', None),
+                        #  getattr(response, 'json', lambda: {})())
