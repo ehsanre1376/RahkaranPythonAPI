@@ -11,22 +11,44 @@ pip install rahkaran-api
 ## Quick Start
 
 ```python
-from rahkaran_api import RahkaranAPI
+import json
+from rahkaran_api import RahkaranAPI, RahkaranConfig
 
-# Initialize the client
-client = RahkaranAPI(
-    rahkaran_name="YOUR_RAHKARAN_NAME",
-    server_name="your-server.com",
-    username="your-username",
-    password="your-password"
+# Create config object
+config = RahkaranConfig(
+    rahkaran_name="code",
+    server_name="localhost",
+    port="80",
+    username="admin",
+    password="admin"
 )
 
-# Make GET request
-response = client._send_get("/your/endpoint/path")
+# Initialize the client with config
+client = RahkaranAPI(config)
 
-# Make POST request
-data = {"key": "value"}
-response = client._send_post("/your/endpoint/path", data)
+
+
+# Make GET request for demonstration
+try:
+    response = client.get(
+        "/General/AddressManagement/Services/AddressManagementWebService.svc/GetRegionalDivisionList"
+    )
+    print(json.dumps(response, ensure_ascii=False, indent=2))    
+except Exception as e:
+    print(f"Error occurred: {str(e)}")
+
+# Data for creating a party
+data = [{"Type ": 1, "FirstName": "Ehsan", "LastName": "Rezaei"}]
+# Make Post request
+try:
+    response = client.post(
+        "/General/PartyManagement/Services/PartyService.svc/GenerateParty",
+        data
+        )
+    print(json.dumps(response, ensure_ascii=False, indent=2))    
+except Exception as e:
+    print(f"Error occurred: {str(e)}")
+
 ```
 
 ## Features
