@@ -5,7 +5,7 @@ A Python client library for interacting with the Rahkaran API.
 ## Installation
 
 ```bash
-pip install rahkaran-api
+pip install RahkaranPythonAPI
 ```
 
 ## Quick Start
